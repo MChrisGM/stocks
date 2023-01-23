@@ -76,31 +76,32 @@ class Market {
   }
 
   update() {
-    // let randV = NormSInv(Math.random());
-    // let randV = 0.1;
-    // for (let stock of Object.keys(this.stocks)) {
-    //   let last = this.stocks[stock].last();
-    //   let shock = 0.1;
-    //   // for (let corr_stock of Object.keys(correlation_matrix)) {
-    //   //   if (corr_stock != stock) {
-    //   //     shock += correlation_matrix[stock][corr_stock] * randV;
-    //   //   }
-    //   // }
-    //   let newP = last * Math.exp(this.stocks[stock].vol() * Math.sqrt(1 / (21600000)) * shock);
-    //   this.stocks[stock].update(newP);
-    // }
 
+    let uncorr = Array.from({length: Object.keys(this.stocks).length}, () => Math.floor(Math.random()*100)/100);
+
+    // console.log(this.covariance_matrix);
     
+    let corr_random = this.matmul(this.cholesky_matrix, uncorr);
+
+    // console.log(corr_random);
+
+    let idx_list = {}
+    for (let s in Object.keys(this.stocks)){
+      idx_list[Object.keys(this.stocks)[s]] = s;
+    }
+
     for(let stock of Object.keys(this.stocks)){
       let S = this.stocks[stock].last();
       let mu = 0.5;
       let vol = this.stocks[stock].vol();
       let period = 1 / (21600000);
-      let N = 2
-      let SN = this.GBMsimulatorMultiVar(S,mu,vol,period,N);
+      
+      // console.log(corr_random[idx_list[stock]][0]);
+      
+      let cholesky_correlated_random = corr_random[idx_list[stock]][0];
+      let SN = this.GBMsimulatorMultiVar(S,mu,vol,period, cholesky_correlated_random);
       this.stocks[stock].update(SN);  
     }
-    
     
   }
 
@@ -130,18 +131,18 @@ class Market {
     let Cov = new Array(m).fill(0).map(() => new Array(n).fill(0));
     for (let i = 0; i < m; i++) {
       for (let j = 0; j < n; j++) {
-        Cov[i][j] = Math.pow(Sigma[i][j], 2);
+        Cov[i][j] = Number(Math.pow(Sigma[i][j], 2).toPrecision(5));
       }
     }
     return Cov;
   }
 
   // https://github.com/eliasmelul/finance_portfolio/blob/master/MCCholesky%20Initial.ipynb
-  GBMsimulatorMultiVar(So, mu, sigma, period, N) {
+  GBMsimulatorMultiVar(So, mu, sigma, period, Ran) {
 
     let drift = mu - 0.5*(sigma*sigma);
 
-    let volatility = sigma*Math.sqrt(period);
+    let volatility = sigma*Math.sqrt(period)*Ran;
 
     let newS = So*Math.exp(drift+volatility);
     
@@ -166,30 +167,15 @@ class Market {
 
   // Cholesky decomposition of a matrix A
   chol(A) {
-   //  const zeros = [...Array(A.length)].map( _ => Array(A.length).fill(0));
-  	// const L = zeros.map((row, r, xL) => row.map((v, c) => {
-  	// 	const sum = row.reduce((s, _, i) => i < c ? s + xL[r][i] * xL[c][i] : s, 0);
-   //    let val = xL[r][c] = c < r + 1 ? r === c ? Math.sqrt(A[r][r] - sum) : (A[r][c] - sum) / xL[c][c] : v;
-   //    // if(!val){val = 0}
-  	// 	return val;
-  	// }));
-  	// return L;
-    
     const n = A.length;
-  
-    // Check that matrix is positive definite
     for (let i = 0; i < n; i++) {
       if (A[i][i] <= 0) return null;
     }
-  
-    // Check that matrix is symmetric
     for (let i = 0; i < n; i++) {
       for (let j = 0; j < n; j++) {
         if (A[i][j] != A[j][i]) return null;
       }
     }
-  
-    // Compute Cholesky decomposition
     const L = new Array(n).fill(0).map( _ => new Array(n).fill(0));
     for (let i = 0; i < n; i++) {
       for (let j = 0; j <= i; j++) {
@@ -197,7 +183,7 @@ class Market {
         for (let k = 0; k < j; k++) {
           sum += L[i][k] * L[j][k];
         }
-        L[i][j] = (i == j) ? Math.sqrt(A[i][i] - sum) : (A[i][j] - sum) / L[j][j];
+        L[i][j] = (i == j) ? Number(Math.sqrt(A[i][i] - sum).toPrecision(5)) : Number(((A[i][j] - sum) / L[j][j]).toPrecision(5));
       }
     }
     return L;
