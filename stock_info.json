@@ -1,0 +1,44 @@
+{
+  "PPCL":{
+    "QTY": 1000,
+    "DES": "Paperclip Company LLC",
+    "EQP": 20,
+    "VOL": 0.2
+  },
+  "APLE":{
+    "QTY": 2000,
+    "DES": "Apples & Oranges LLC",
+    "EQP": 120,
+    "VOL": 0.4
+  },
+  "NDL":{
+    "QTY": 240,
+    "DES": "Not Doing Laundry LLC",
+    "EQP": 5,
+    "VOL": 0.1
+  },
+  "BRC":{
+    "QTY": 5000,
+    "DES": "Bring Cats Corp. LLC",
+    "EQP": 1,
+    "VOL": 0.5
+  },
+  "KLYD":{
+    "QTY": 650,
+    "DES": "Kloud Your Downloads Company LLC",
+    "EQP": 25,
+    "VOL": 0.7
+  },
+  "TTY":{
+    "QTY": 12000,
+    "DES": "TalkTalky Company LLC",
+    "EQP": 0.20,
+    "VOL": 0.2
+  },
+  "OPPE":{
+    "QTY": 400,
+    "DES": "OPPE Corp. LLC",
+    "EQP": 25,
+    "VOL": 0.6
+  }
+}

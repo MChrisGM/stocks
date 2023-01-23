@@ -19,6 +19,8 @@
   "homepage": "https://github.com/MChrisGM/stocks#readme",
   "dependencies": {
     "express": "^4.17.3",
+    "mathjs": "^11.5.0",
+    "numeric": "^1.2.6",
     "socket.io": "^4.4.1"
   }
 }
