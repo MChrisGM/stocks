@@ -50,7 +50,6 @@ class Market {
 
     // console.log(this.stocks);
 
-    
     console.log("\nSigma: ");
     print2D(this.sigma_matrix);
     
@@ -72,18 +71,9 @@ class Market {
     // ];
     // let n = this.chol(m);
     // print2D(n);
-    
-  }
 
-  update() {
-
-    let uncorr = Array.from({length: Object.keys(this.stocks).length}, () => Math.floor(Math.random()*100)/100);
-
-    // console.log(this.covariance_matrix);
-    
-    let corr_random = this.matmul(this.cholesky_matrix, uncorr);
-
-    // console.log(corr_random);
+    let uncorr = Array.from({length: Object.keys(this.stocks).length}, () => (Math.floor(Math.random()*100)/100)* 2 - 1);
+    let corr_random = this.multiplyMatrix(this.cholesky_matrix, uncorr);
 
     let idx_list = {}
     for (let s in Object.keys(this.stocks)){
@@ -95,10 +85,33 @@ class Market {
       let mu = 0.5;
       let vol = this.stocks[stock].vol();
       let period = 1 / (21600000);
-      
-      // console.log(corr_random[idx_list[stock]][0]);
-      
-      let cholesky_correlated_random = corr_random[idx_list[stock]][0];
+
+      let cholesky_correlated_random = corr_random[idx_list[stock]];
+      let SN = this.GBMsimulatorMultiVar(S,mu,vol,period, cholesky_correlated_random);
+      this.stocks[stock].update(SN);  
+    }
+   
+    
+  }
+
+  update() {
+
+    let uncorr = Array.from({length: Object.keys(this.stocks).length}, () => (Math.floor(Math.random()*100)/100)* 2 - 1);
+    let corr_random = this.multiplyMatrix(this.cholesky_matrix, uncorr);
+
+    let idx_list = {}
+    for (let s in Object.keys(this.stocks)){
+      idx_list[Object.keys(this.stocks)[s]] = s;
+    }
+
+    for(let stock of Object.keys(this.stocks)){
+      let S = this.stocks[stock].last();
+      let mu = 0.5;
+      let vol = this.stocks[stock].vol();
+      let period = 1 / (5896800);
+
+      let cholesky_correlated_random = corr_random[idx_list[stock]];
+      // console.log(corr_random);
       let SN = this.GBMsimulatorMultiVar(S,mu,vol,period, cholesky_correlated_random);
       this.stocks[stock].update(SN);  
     }
@@ -140,9 +153,11 @@ class Market {
   // https://github.com/eliasmelul/finance_portfolio/blob/master/MCCholesky%20Initial.ipynb
   GBMsimulatorMultiVar(So, mu, sigma, period, Ran) {
 
-    let drift = mu - 0.5*(sigma*sigma);
+    let drift = (mu - (sigma*sigma)/2)*period;
 
     let volatility = sigma*Math.sqrt(period)*Ran;
+  
+    // console.log(Ran,"-",drift,"-",volatility,"-",Math.exp(drift+volatility));
 
     let newS = So*Math.exp(drift+volatility);
     
@@ -192,7 +207,7 @@ class Market {
   // Matrix multiplication of A and B
   matmul(A, B) {
     let m = A.length, n = A[0].length, p = B[0].length;
-    let C = new Array(m).fill(0).map(() => new Array(p).fill(0));
+    let C = new Array(m).fill(1).map(() => new Array(p).fill(1));
     for (let i = 0; i < m; i++) {
       for (let j = 0; j < p; j++) {
         for (let k = 0; k < n; k++) {
@@ -201,6 +216,26 @@ class Market {
       }
     }
     return C;
+  }
+  
+  multiplyMatrix(matrix, vector) {
+    const n = matrix.length; // Get the size of the matrix
+  
+    if (n !== vector.length) { // Check if the matrices are compatible for multiplication
+      throw new Error('Matrix and vector have incompatible sizes.');
+    }
+  
+    const result = []; // Create an empty array to store the result
+  
+    for (let i = 0; i < n; i++) {
+      let sum = 0;
+      for (let j = 0; j < n; j++) {
+        sum += matrix[i][j] * vector[j]; // Multiply corresponding elements and sum the results
+      }
+      result.push(sum); // Add the result to the result array
+    }
+  
+    return result; // Return the result
   }
 
   // Capital asset pricing model (CAPM) for estimating the required return on a stock
@@ -226,7 +261,11 @@ class Market {
 
 function print2D(array){
   for(let row in array){
-    console.log(JSON.stringify(array[row]));
+    let r = "";
+    for(let item in array[row]){
+      r += " " + (Number(array[row][item]) >= 0 ? ' ' : '') + Number(array[row][item]).toFixed(2) ;
+    }
+    console.log(r);
   }
 }
 
