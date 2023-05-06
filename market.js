@@ -1,4 +1,5 @@
 const Stock = require('./stock.js');
+const crypto = require('crypto').webcrypto;
 
 let numeric = require('numeric');
 
@@ -48,55 +49,29 @@ class Market {
     this.covariance_matrix = this.volToCov(this.sigma_matrix);
     this.cholesky_matrix = this.chol(this.covariance_matrix);
 
-    // console.log(this.stocks);
-
     console.log("\nSigma: ");
     print2D(this.sigma_matrix);
     
     console.log("\nCovariance: ");
     print2D(this.covariance_matrix);
 
-    // console.log("isSymmetric: ", isSymmetric(this.covariance_matrix));
-    // console.log("isPositiveDefinite: ", isPositiveDefinite(this.covariance_matrix));
-    // console.log("isInvertible: ", isInvertible(this.covariance_matrix));
-    
     console.log("\nCholesky: ");
     print2D(this.cholesky_matrix);
 
-    // let m = [
-    //   [0.000030,	0.000004,	-0.000027,	-0.000022],
-    //   [0.000004,	0.000005,	-0.000003,	0.000002],
-    //   [-0.000027,	-0.000003,	0.000065,	0.000025],
-    //   [-0.000022,	0.000002,	0.000025,	0.000045]
-    // ];
-    // let n = this.chol(m);
-    // print2D(n);
-
-    let uncorr = Array.from({length: Object.keys(this.stocks).length}, () => (Math.floor(Math.random()*100)/100)* 2 - 1);
-    let corr_random = this.multiplyMatrix(this.cholesky_matrix, uncorr);
-
-    let idx_list = {}
-    for (let s in Object.keys(this.stocks)){
-      idx_list[Object.keys(this.stocks)[s]] = s;
-    }
-
-    for(let stock of Object.keys(this.stocks)){
-      let S = this.stocks[stock].last();
-      let mu = 0.5;
-      let vol = this.stocks[stock].vol();
-      let period = 1 / (21600000);
-
-      let cholesky_correlated_random = corr_random[idx_list[stock]];
-      let SN = this.GBMsimulatorMultiVar(S,mu,vol,period, cholesky_correlated_random);
-      this.stocks[stock].update(SN);  
-    }
-   
+    // for(let i=0;i<100;i++){
+    //   let time = Date.now()-(250 * (100-i));
+    //   console.log("Market update: ",i, "Time: ",new Date(time).toLocaleString(), time);
+    //   this.update(time);
+    //   console.log(this.stocks[Object.keys(this.stocks)[0]])
+    // }
+    // console.log(new Date(Date.now()).toLocaleString());
+    // console.log(this.stocks[Object.keys(this.stocks)[0]])
     
   }
 
-  update() {
+  update(timestamp) {
 
-    let uncorr = Array.from({length: Object.keys(this.stocks).length}, () => (Math.floor(Math.random()*100)/100)* 2 - 1);
+    let uncorr = Array.from({length: Object.keys(this.stocks).length}, () => getRandomIntInclusive(-1,1));
     let corr_random = this.multiplyMatrix(this.cholesky_matrix, uncorr);
 
     let idx_list = {}
@@ -111,9 +86,13 @@ class Market {
       let period = 1 / (5896800);
 
       let cholesky_correlated_random = corr_random[idx_list[stock]];
-      // console.log(corr_random);
+
       let SN = this.GBMsimulatorMultiVar(S,mu,vol,period, cholesky_correlated_random);
-      this.stocks[stock].update(SN);  
+      if(timestamp){
+        this.stocks[stock].addHist(SN, timestamp); 
+      }else{
+        this.stocks[stock].update(SN);  
+      }
     }
     
   }
@@ -257,6 +236,18 @@ class Market {
     return R;
   }
 
+}
+
+function getRandomIntInclusive(min, max) {
+    const randomBuffer = new Uint32Array(1);
+
+    crypto.getRandomValues(randomBuffer);
+
+    let randomNumber = randomBuffer[0] / (0xffffffff + 1);
+
+    min = Math.ceil(min);
+    max = Math.floor(max);
+    return Math.floor(randomNumber * (max - min + 1)) + min;
 }
 
 function print2D(array){

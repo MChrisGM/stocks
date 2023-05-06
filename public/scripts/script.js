@@ -69,18 +69,31 @@ function update_stock_info_div(stock){
   stock_info_div.appendChild(stock_tab);
 
   STOCK = stock;
+  // console.log(stock);
   update_graph();
   
 }
 
 function tooltip(point) {
-      var color = point.options('close') > point.options('open') ? 'green' : 'red';
-      return (
-        'Change: <span style="color:' +
-        color +
-        '">{%close-%open}</span><br>Open: %open<br/>High: %high<br/>Low: %low<br/>Close: %close'
-      );
-    }
+  var color = point.options('close') > point.options('open') ? 'green' : 'red';
+  return (
+    'Change: <span style="color:' +
+    color +
+    '">{%close-%open}</span><br>Open: %open<br/>High: %high<br/>Low: %low<br/>Close: %close'
+  );
+}
+
+function getClose(){
+  let data = {};
+  let inline = "";
+  for(let s in STOCK["HIS"]){
+    data[STOCK["HIS"][s]["TS"]] = STOCK["HIS"][s]["CLOSE"];
+    inline+=STOCK["HIS"][s]["TS"]+","+STOCK["HIS"][s]["CLOSE"]+'\n';
+    console.log(STOCK["HIS"][s]["TS"]+","+STOCK["HIS"][s]["CLOSE"])
+  }
+  copy(inline);
+  // console.log(data);
+}
 
 function graph_data(){
   let graph_points = [];
