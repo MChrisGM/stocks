@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start":"node index.js",
+    "start": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/MChrisGM/stocks#readme",
   "dependencies": {
+    "calculate-correlation": "^1.2.3",
     "express": "^4.17.3",
     "mathjs": "^11.5.0",
     "socket.io": "^4.4.1"

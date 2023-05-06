@@ -1,5 +1,6 @@
 const Stock = require('./stock.js');
 const crypto = require('crypto').webcrypto;
+const calculateCorrelation = require("calculate-correlation");
 
 class Market {
   constructor(stock_info, vol_matrix) {
@@ -89,6 +90,34 @@ class Market {
     return this.stocks[ticker].getData();
   }
 
+  getCorrelations(){
+    let close_series = {};
+    for (let stock of Object.keys(this.stocks)) {
+      let series = {};
+      for(let ts of Object.keys(this.stocks[stock].historical)){
+        series[ts] = this.stocks[stock].historical[ts].CLOSE;
+      }
+      close_series[stock] = series;
+    }
+
+    let correlation_table = Array.from(Array(Object.keys(this.stocks).length), () => new Array(Object.keys(this.stocks).length))
+
+    for (let stock1 of Object.keys(this.stocks)) {
+      for (let stock2 of Object.keys(this.stocks)) {
+        if (stock1 != stock2){
+          let series1 = Object.values(close_series[stock1]);
+          let series2 = Object.values(close_series[stock2]);
+          let corr = correlationCoefficient(series1,series2,series1.length);
+          correlation_table[Object.keys(this.stocks).indexOf(stock1)][Object.keys(this.stocks).indexOf(stock2)] = corr;
+        }
+      }
+    }
+
+    console.log();
+    this.print2D(correlation_table);
+
+  }
+
   volToCov(Sigma) {
     let m = Sigma.length, n = Sigma[0].length;
     let Cov = new Array(m).fill(0).map(() => new Array(n).fill(0));
@@ -173,6 +202,20 @@ class Market {
     }
   }
 
+}
+
+function correlationCoefficient(X, Y, n){
+    let sum_X = 0, sum_Y = 0, sum_XY = 0;
+    let squareSum_X = 0, squareSum_Y = 0;
+    for(let i = 0; i < n; i++){
+        sum_X = sum_X + X[i];
+        sum_Y = sum_Y + Y[i];
+        sum_XY = sum_XY + X[i] * Y[i];
+        squareSum_X = squareSum_X + X[i] * X[i];
+        squareSum_Y = squareSum_Y + Y[i] * Y[i];
+    }
+    let corr = (n * sum_XY - sum_X * sum_Y)/(Math.sqrt((n * squareSum_X - sum_X * sum_X) * (n * squareSum_Y - sum_Y * sum_Y)));
+    return corr;
 }
 
 module.exports = Market;

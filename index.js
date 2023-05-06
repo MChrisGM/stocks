@@ -47,6 +47,7 @@ io.sockets.on('connection',
 
 function mainStockMarket() {
   market.update();
+  market.getCorrelations();
 }
 
 function randomString(length, chars) {
