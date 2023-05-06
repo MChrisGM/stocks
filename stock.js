@@ -83,6 +83,7 @@ class Stock {
       }
     }
   }
+  
   vol(){
     return this.volatility;
   }
