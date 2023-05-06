@@ -25,6 +25,10 @@ function listen() {
     io.sockets.emit("stocks", market.getStocks());
   }, 1000);
 
+  setInterval(function() {
+    market.getCorrelations();
+  }, 5000);
+
 }
 
 app.use(express.static('public'));
@@ -47,7 +51,6 @@ io.sockets.on('connection',
 
 function mainStockMarket() {
   market.update();
-  market.getCorrelations();
 }
 
 function randomString(length, chars) {

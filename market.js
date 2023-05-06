@@ -104,12 +104,10 @@ class Market {
 
     for (let stock1 of Object.keys(this.stocks)) {
       for (let stock2 of Object.keys(this.stocks)) {
-        if (stock1 != stock2){
-          let series1 = Object.values(close_series[stock1]);
-          let series2 = Object.values(close_series[stock2]);
-          let corr = correlationCoefficient(series1,series2,series1.length);
-          correlation_table[Object.keys(this.stocks).indexOf(stock1)][Object.keys(this.stocks).indexOf(stock2)] = corr;
-        }
+        let series1 = Object.values(close_series[stock1]);
+        let series2 = Object.values(close_series[stock2]);
+        let corr = correlationCoefficient(series1,series2,series1.length);
+        correlation_table[Object.keys(this.stocks).indexOf(stock1)][Object.keys(this.stocks).indexOf(stock2)] = corr;
       }
     }
 
