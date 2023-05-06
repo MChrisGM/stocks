@@ -1,2 +1,2 @@
 # Stock market simulator
-Fake stock market trading application using a Monte Carlo simulation for interconnected assets
+Fake stock market trading application using a Monte Carlo simulation for correlated assets
