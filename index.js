@@ -50,7 +50,6 @@ io.sockets.on('connection',
 
     socket.on("setLength", function(n) {
       socket._requestN = n;
-      console.log("Set ",n);
       socket.emit("returnStock", market.getStock(socket._ticker, socket._requestN));
     });
 
