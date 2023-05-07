@@ -29,8 +29,22 @@
             <div class="container__top" style="width:100%;min-height: 20%;">
                <div class="item_container" id="graph" style="overflow: hidden;">
 <!--                   Graph -->
-                 <div id="chartDiv" class="chart"></div>
+
+                  <div id="chartDiv" class="chart"></div>
                  
+                  <div class="dropdown" style="float:left; padding: 4px;">
+                     <button class="dropbtn">Length</button>
+                     <div class="dropdown-content">
+                        <button onclick="setLength(10);">10</button><br>
+                        <button onclick="setLength(15);">15</button><br>
+                        <button onclick="setLength(30);">30</button><br>
+                        <button onclick="setLength(50);">50</button><br>
+                        <button onclick="setLength(60);">60</button><br>
+                        <button onclick="setLength(100);">100</button><br>
+                     </div>
+                  </div>
+
+                  
                </div>
             </div>
             <div class="resizer" data-direction="vertical"></div>

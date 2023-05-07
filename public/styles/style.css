@@ -140,3 +140,38 @@ canvas {
   width: 100%;
   height: 100%;
 }
+
+.dropbtn {
+	background-color: #04AA6D;
+	color: white;
+	padding: 5px;
+	font-size: 16px;
+	border: none;
+	cursor: pointer;
+  }
+  
+  .dropdown {
+	position: absolute;
+	display: block;
+  }
+  
+  .dropdown-content {
+	display: none;
+	position: absolute;
+	left: 0;
+	background-color: #f9f9f9;
+	min-width: 5%;
+	box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+	z-index: 1;
+  }
+  
+  .dropdown-content button {
+	color: black;
+	text-decoration: none;
+	display: inline-block;
+	width: 100%;
+  }
+  
+  .dropdown-content button:hover {background-color: #f1f1f1;}
+  .dropdown:hover .dropdown-content {display: block;}
+  .dropdown:hover .dropbtn {background-color: #3e8e41;}

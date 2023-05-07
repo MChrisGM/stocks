@@ -1,10 +1,14 @@
 const Stock = require('./stock.js');
 const crypto = require('crypto').webcrypto;
 
+const process = require("process")
+const rdl = require("readline")
+
 class Market {
-  constructor(stock_info, vol_matrix) {
+  constructor(stock_info, vol_matrix, market_upd_per_sec) {
     this.market_info = stock_info;
     this.stocks = {};
+    this.market_update_time = market_upd_per_sec;
 
     for (let ticker of Object.keys(this.market_info)) {
       this.stocks[ticker] = new Stock(ticker, this.market_info[ticker]);
@@ -29,10 +33,11 @@ class Market {
     console.log("\nCholesky: ");
     this.print2D(this.cholesky_matrix);
 
-    let points = 10000;
+    let points = 50000;
     for(let i=0;i<points;i++){
-      let time = (Date.now() - (Date.now() % 1000))-(250 * (points-i));
+      let time = (Date.now() - (Date.now() % 1000))-((1000*this.market_update_time) * (points-i));
       this.update(time);
+      console.log("Progress: "+Number((i*100)/points).toFixed(1)+"%");
     }
   }
 
@@ -50,7 +55,7 @@ class Market {
       let S = this.stocks[stock].last();
       let mu = 0.5;
       let vol = this.stocks[stock].vol();
-      let period = 1 / (5896800 * 4);
+      let period = 1 / (5896800 * (1/this.market_update_time));
 
       let cholesky_correlated_random = corr_random[idx_list[stock]];
 
@@ -83,6 +88,7 @@ class Market {
     if (!(this.getTickers()).map(tic => tic.TKR).includes(ticker)) { return {} };
     let s = this.stocks[ticker].getData();
     let his_data = Object.values(s["HIS"]).slice(-n);
+    s["HIS"] = {};
     his_data.forEach(item => { s["HIS"][item["TS"]] = item} );
     return s;
   }

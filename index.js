@@ -10,7 +10,8 @@ const Market = require('./market.js');
 var server = app.listen(process.env.PORT || 3000, listen);
 var io = require('socket.io')(server);
 
-let market = new Market(stockInfo, vol_matrix);
+let market_update = 0.25;
+let market = new Market(stockInfo, vol_matrix, market_update);
 
 function listen() {
   var host = server.address().address;
@@ -19,14 +20,14 @@ function listen() {
 
   setInterval(function() {
     mainStockMarket();
-  }, 1000);
+  }, (1000*market_update));
 
   setInterval(function() {
     io.sockets.emit("stocks", market.getStocks());
   }, 1000);
 
   setInterval(function() {
-    market.getSeriesInfo();
+    // market.getSeriesInfo();
   }, 1000);
 
 }
@@ -38,12 +39,19 @@ io.sockets.on('connection',
     console.log("Socket connected: " + socket.id);
 
     setInterval(function() {
-      socket.emit("returnStock", market.getStock(socket._ticker));
+      socket.emit("returnStock", market.getStock(socket._ticker, socket._requestN));
     }, 1000);
 
     socket.on("getStock", function(stock) {
       socket._ticker = stock.ticker;
+      socket._requestN = stock.n;
       socket.emit("returnStock", market.getStock(stock.ticker,stock.n));
+    });
+
+    socket.on("setLength", function(n) {
+      socket._requestN = n;
+      console.log("Set ",n);
+      socket.emit("returnStock", market.getStock(socket._ticker, socket._requestN));
     });
 
   }

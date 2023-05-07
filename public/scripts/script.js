@@ -2,7 +2,7 @@ var chart;
 var STOCK;
 let socket;
 
-const GRAPH_LENGTH = 15;
+let GRAPH_LENGTH = 15;
 
 const currency_formatter = new Intl.NumberFormat('en-US', {
     style: 'currency', 
@@ -103,7 +103,7 @@ function graph_data(){
   let his;
   
   if(stock.HIS){his = Object.values(stock.HIS);}else{his = [];}
-  
+
   for(let point of his.slice(-GRAPH_LENGTH)){
     let p = [];
     p.push(new Date(point.TS));
@@ -125,6 +125,7 @@ function update_graph(){
       debug: false,
       type: 'candlestick',
       palette: 'fiveColor18',
+      title_label_text: " ",
       legend: {
         template: '%icon %name',
         position: 'inside top left'
@@ -150,6 +151,11 @@ function update_graph(){
       ]
     });
   
+}
+
+function setLength(n){
+  GRAPH_LENGTH = n;
+  socket.emit("setLength", n);
 }
 
 function select_stock(ticker){
