@@ -1,6 +1,5 @@
 const Stock = require('./stock.js');
 const crypto = require('crypto').webcrypto;
-const calculateCorrelation = require("calculate-correlation");
 
 class Market {
   constructor(stock_info, vol_matrix) {
@@ -30,15 +29,11 @@ class Market {
     console.log("\nCholesky: ");
     this.print2D(this.cholesky_matrix);
 
-    // for(let i=0;i<100;i++){
-    //   let time = Date.now()-(250 * (100-i));
-    //   console.log("Market update: ",i, "Time: ",new Date(time).toLocaleString(), time);
-    //   this.update(time);
-    //   console.log(this.stocks[Object.keys(this.stocks)[0]])
-    // }
-    // console.log(new Date(Date.now()).toLocaleString());
-    // console.log(this.stocks[Object.keys(this.stocks)[0]])
-
+    let points = 10000;
+    for(let i=0;i<points;i++){
+      let time = (Date.now() - (Date.now() % 1000))-(250 * (points-i));
+      this.update(time);
+    }
   }
 
   update(timestamp) {
@@ -55,7 +50,7 @@ class Market {
       let S = this.stocks[stock].last();
       let mu = 0.5;
       let vol = this.stocks[stock].vol();
-      let period = 1 / (5896800);
+      let period = 1 / (5896800 * 4);
 
       let cholesky_correlated_random = corr_random[idx_list[stock]];
 
@@ -66,7 +61,6 @@ class Market {
         this.stocks[stock].update(SN);
       }
     }
-
   }
 
   getTickers() {
@@ -85,12 +79,15 @@ class Market {
     return stks;
   }
 
-  getStock(ticker) {
+  getStock(ticker, n) {
     if (!(this.getTickers()).map(tic => tic.TKR).includes(ticker)) { return {} };
-    return this.stocks[ticker].getData();
+    let s = this.stocks[ticker].getData();
+    let his_data = Object.values(s["HIS"]).slice(-n);
+    his_data.forEach(item => { s["HIS"][item["TS"]] = item} );
+    return s;
   }
 
-  getCorrelations(){
+  getSeriesInfo(){
     let close_series = {};
     for (let stock of Object.keys(this.stocks)) {
       let series = {};
@@ -100,20 +97,24 @@ class Market {
       close_series[stock] = series;
     }
 
-    let correlation_table = Array.from(Array(Object.keys(this.stocks).length), () => new Array(Object.keys(this.stocks).length))
+    let correlation_table = Array.from(Array(Object.keys(this.stocks).length), () => new Array(Object.keys(this.stocks).length));
+    let volatilities = Array.from(Array(Object.keys(this.stocks).length), () => 0);
 
     for (let stock1 of Object.keys(this.stocks)) {
       for (let stock2 of Object.keys(this.stocks)) {
-        let series1 = Object.values(close_series[stock1]);
-        let series2 = Object.values(close_series[stock2]);
-        let corr = correlationCoefficient(series1,series2,series1.length);
+        let series1 = Object.values(close_series[stock1]).slice(0, -1);
+        let series2 = Object.values(close_series[stock2]).slice(0, -1);
+        let corr = correlationCoefficient(series1, series2, series1.length);
         correlation_table[Object.keys(this.stocks).indexOf(stock1)][Object.keys(this.stocks).indexOf(stock2)] = corr;
       }
-    }
 
+      volatilities[Object.keys(this.stocks).indexOf(stock1)] = Number(calculateVolatility(Object.values(close_series[stock1]).slice(0, -1))).toFixed(3);
+
+    }
     console.log();
     this.print2D(correlation_table);
-
+    console.log();
+    console.log(volatilities.join(" "));
   }
 
   volToCov(Sigma) {
@@ -214,6 +215,13 @@ function correlationCoefficient(X, Y, n){
     }
     let corr = (n * sum_XY - sum_X * sum_Y)/(Math.sqrt((n * squareSum_X - sum_X * sum_X) * (n * squareSum_Y - sum_Y * sum_Y)));
     return corr;
+}
+
+function calculateVolatility(array) {
+  const n = array.length
+  const mean = array.reduce((a, b) => (a + b), 0) / n
+  const deviation = array.reduce((dev, val) => (dev + (val - mean) * (val - mean)), 0)
+  return Math.sqrt(deviation / n)
 }
 
 module.exports = Market;

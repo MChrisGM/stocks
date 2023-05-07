@@ -6,41 +6,34 @@ class Stock {
       LAST_ASK: 0
     };
     this.last_close = stock_info["EQP"];
-    this.last_time = Math.floor(Date.now() / 1000);
+    this.last_time = 0;
     this.volatility = stock_info["VOL"];
     this.quantity = stock_info["QTY"];
     this.description = stock_info["DES"];
     this.equity = this.quantity * this.last_close;
-    this.historical = {
-      [Math.floor((Date.now() / 1000) / 60)] : {
-        TS    : Math.floor((Date.now() / 1000) / 60),
-        OPEN  : this.last_close,
-        HIGH  : this.last_close,
-        LOW   : this.last_close,
-        CLOSE : this.last_close
-      }
-    };
+    this.historical = {};
   }
 
   addHist(new_price, timestamp){
-    let c_sec = Math.floor(timestamp / 1000);
-    let c_min = Math.floor(c_sec / 60);
+    let c_sec = Math.floor(timestamp - (timestamp % 1000));
+    let c_min = Math.floor(timestamp - (timestamp % 60000));
 
-    if(c_sec - this.last_time >= 1){
+    if(c_sec - this.last_time >= 1000){
       this.last_close = new_price;
-      this.last_time = Math.floor(timestamp / 1000);
+      this.last_time = Math.floor(timestamp - (timestamp % 1000));
     }
 
     let last_timestamp = Object.keys(this.historical).sort(function(a, b) {return b - a;})[0];
 
-    if(c_min - last_timestamp >= 1){
+    if(!last_timestamp || c_min - last_timestamp >= 60000){
       this.historical[c_min] = {
         TS: c_min,
-        OPEN: new_price,
+        OPEN: this.last_close,
         HIGH: new_price,
         LOW:  new_price,
         CLOSE: new_price
       };
+
     }else{
       if(Object.keys(this.historical).includes(last_timestamp)){
         if(new_price > this.historical[last_timestamp].HIGH){
@@ -54,24 +47,25 @@ class Stock {
   }
 
   update(new_price) {    
-    let c_sec = Math.floor(Date.now() / 1000);
-    let c_min = Math.floor(c_sec / 60);
+    let c_sec = Math.floor(Date.now() - (Date.now() % 1000));
+    let c_min = Math.floor(Date.now() - (Date.now() % 60000));
 
-    if(c_sec - this.last_time >= 1){
+    if(c_sec - this.last_time >= 1000){
       this.last_close = new_price;
-      this.last_time = Math.floor(Date.now() / 1000);
+      this.last_time = Math.floor(Date.now() - (Date.now() % 1000));
     }
 
     let last_timestamp = Object.keys(this.historical).sort(function(a, b) {return b - a;})[0];
 
-    if(c_min - last_timestamp >= 1){
+    if(!last_timestamp || c_min - last_timestamp >= 60000){
       this.historical[c_min] = {
         TS: c_min,
-        OPEN: new_price,
+        OPEN: this.last_close,
         HIGH: new_price,
         LOW:  new_price,
         CLOSE: new_price
       };
+
     }else{
       if(Object.keys(this.historical).includes(last_timestamp)){
         if(new_price > this.historical[last_timestamp].HIGH){
@@ -83,7 +77,7 @@ class Stock {
       }
     }
   }
-  
+
   vol(){
     return this.volatility;
   }

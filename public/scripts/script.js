@@ -2,6 +2,8 @@ var chart;
 var STOCK;
 let socket;
 
+const GRAPH_LENGTH = 15;
+
 const currency_formatter = new Intl.NumberFormat('en-US', {
     style: 'currency', 
     currency: 'USD'
@@ -102,9 +104,9 @@ function graph_data(){
   
   if(stock.HIS){his = Object.values(stock.HIS);}else{his = [];}
   
-  for(let point of his){
+  for(let point of his.slice(-GRAPH_LENGTH)){
     let p = [];
-    p.push(new Date(point.TS * 60 * 1000));
+    p.push(new Date(point.TS));
     p.push(point.OPEN);
     p.push(point.HIGH);
     p.push(point.LOW);
@@ -151,9 +153,8 @@ function update_graph(){
 }
 
 function select_stock(ticker){
-  socket.emit("getStock", ticker);
+  socket.emit("getStock", {ticker:ticker, n:GRAPH_LENGTH});
 }
-
 
 window.onload = function(){
   socket = io(location.href);

@@ -19,15 +19,15 @@ function listen() {
 
   setInterval(function() {
     mainStockMarket();
-  }, 250);
+  }, 1000);
 
   setInterval(function() {
     io.sockets.emit("stocks", market.getStocks());
   }, 1000);
 
   setInterval(function() {
-    market.getCorrelations();
-  }, 5000);
+    market.getSeriesInfo();
+  }, 1000);
 
 }
 
@@ -41,9 +41,9 @@ io.sockets.on('connection',
       socket.emit("returnStock", market.getStock(socket._ticker));
     }, 1000);
 
-    socket.on("getStock", function(ticker) {
-      socket._ticker = ticker;
-      socket.emit("returnStock", market.getStock(ticker));
+    socket.on("getStock", function(stock) {
+      socket._ticker = stock.ticker;
+      socket.emit("returnStock", market.getStock(stock.ticker,stock.n));
     });
 
   }
