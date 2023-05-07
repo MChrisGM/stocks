@@ -1,8 +1,11 @@
 var chart;
 var STOCK;
 let socket;
+let selected_stock = "";
 
-let GRAPH_LENGTH = 15;
+const LENGTH = [10,200];
+
+let GRAPH_LENGTH = 20;
 
 const currency_formatter = new Intl.NumberFormat('en-US', {
     style: 'currency', 
@@ -34,7 +37,10 @@ function update_stocks_div(stocks){
       stock_tab.appendChild(seperator);
       stocks_div.appendChild(stock_tab);
     }
-  }
+    if(selected_stock == ""){
+      select_stock(stocks[0].TKR);
+    }
+}
 
 function update_stock_info_div(stock){
 
@@ -113,6 +119,16 @@ function graph_data(){
     p.push(point.CLOSE);
     graph_points.push(p);
   }
+  let point = his[his.length-1];
+  for(let i=0;i<2;i++){
+    let p = [];
+    p.push(new Date(point.TS+(60000*(i+1))));
+    p.push(null);
+    p.push(null);
+    p.push(null);
+    p.push(null);
+    graph_points.push(p);
+  }
   return graph_points
 }
 
@@ -159,6 +175,7 @@ function setLength(n){
 }
 
 function select_stock(ticker){
+  selected_stock = ticker;
   socket.emit("getStock", {ticker:ticker, n:GRAPH_LENGTH});
 }
 
@@ -171,6 +188,19 @@ window.onload = function(){
   
   socket.on("returnStock", function(stock){
     update_stock_info_div(stock);
+  });
+
+  document.getElementById("graph").addEventListener("wheel", (event) => {
+    let y = event.deltaY*0.01;
+    if(y > 0) {y = 1;}
+    if(y < 0) {y = -1;}
+
+    let scroll_speed = 10;
+    
+    if(GRAPH_LENGTH+scroll_speed*y >= LENGTH[0] && GRAPH_LENGTH+scroll_speed*y <= LENGTH[1]){
+      GRAPH_LENGTH += scroll_speed*y;
+      setLength(GRAPH_LENGTH);
+    }
   });
   
 }
@@ -248,3 +278,5 @@ document.addEventListener('DOMContentLoaded', function () {
 		resizable(ele);
 	});
 });
+
+
