@@ -1,9 +1,6 @@
 const Stock = require('./stock.js');
 const crypto = require('crypto').webcrypto;
 
-const process = require("process")
-const rdl = require("readline")
-
 class Market {
   constructor(stock_info, vol_matrix, market_upd_per_sec) {
     this.market_info = stock_info;
@@ -13,9 +10,6 @@ class Market {
     for (let ticker of Object.keys(this.market_info)) {
       this.stocks[ticker] = new Stock(ticker, this.market_info[ticker]);
     }
-
-    let ticker = Object.keys(this.market_info)[0];
-    this.stocks[ticker] = new Stock(ticker, this.market_info[ticker]);
 
     this.sigma_matrix = [];
     for (let i = 0; i < Object.keys(vol_matrix).length; i++) {
@@ -33,17 +27,53 @@ class Market {
     console.log("\nCholesky: ");
     this.print2D(this.cholesky_matrix);
 
-    let points = 50000;
-    for(let i=0;i<points;i++){
-      let time = (Date.now() - (Date.now() % 1000))-((1000*this.market_update_time) * (points-i));
-      this.update(time);
-      console.log("Progress: "+Number((i*100)/points).toFixed(1)+"%");
+    let points = 2000;
+    let ts = Date.now();
+    let loops = 500;
+
+    let vol = Array.from(new Array(Object.keys(this.stocks).length), () => 0);
+    let corr = Array.from(new Array(Object.keys(this.stocks).length), () => Array.from(new Array(Object.keys(this.stocks).length), () => 0));
+
+    for(let j=0;j<loops;j++){
+      console.log("Loop: "+j);
+
+      for (let ticker of Object.keys(this.market_info)) {
+        this.stocks[ticker] = new Stock(ticker, this.market_info[ticker]);
+      }
+
+      for(let i=0;i<points;i++){
+        let time = (ts - (ts % 1000))-((1000*this.market_update_time) * (points-i));
+        this.update(time);
+        console.log(Number((j*100)/loops).toFixed(1)+"%","Progress: "+Number((i*100)/points).toFixed(1)+"%");
+      }
+
+      let inf = this.getSeriesInfo(false);
+
+      for(let i=0;i<Object.keys(this.stocks).length;i++){
+        for(let j=0;j<Object.keys(this.stocks).length;j++){
+          corr[i][j] = (corr[i][j]+inf.correlation[i][j])/2; 
+        }
+        vol[i] = (vol[i] + inf.volatility[i])/2;
+      }
+
+      console.log();
+      this.print2D(corr);
+      console.log();
+      console.log(vol.map(a => (a/(Math.sqrt(1/(252*6.5*60))))).map(a=>a.toFixed(3)).join(" "));
     }
+
+    console.log();
+    console.log("Final:");
+    console.log();
+    this.print2D(corr);
+    console.log();
+    console.log(vol.map(a => (a/(Math.sqrt(1/(252*6.5*60))))).map(a=>a.toFixed(3)).join(" "));
+    
   }
 
   update(timestamp) {
 
-    let uncorr = Array.from({ length: Object.keys(this.stocks).length }, () => this.rand(-1, 1));
+    let uncorr = Array.from({ length: Object.keys(this.stocks).length }, () => [this.rand(-1, 1)]);
     let corr_random = this.matrix_dot(this.cholesky_matrix, uncorr);
 
     let idx_list = {}
@@ -93,7 +123,7 @@ class Market {
     return s;
   }
 
-  getSeriesInfo(){
+  getSeriesInfo(display){
     let close_series = {};
     for (let stock of Object.keys(this.stocks)) {
       let series = {};
@@ -114,13 +144,21 @@ class Market {
         correlation_table[Object.keys(this.stocks).indexOf(stock1)][Object.keys(this.stocks).indexOf(stock2)] = corr;
       }
 
-      volatilities[Object.keys(this.stocks).indexOf(stock1)] = Number(calculateVolatility(Object.values(close_series[stock1]).slice(0, -1))).toFixed(3);
+      volatilities[Object.keys(this.stocks).indexOf(stock1)] = Number(calculateVolatility(Object.values(close_series[stock1]).slice(0, -1)));
+
 
     }
-    console.log();
-    this.print2D(correlation_table);
-    console.log();
-    console.log(volatilities.join(" "));
+    if(display){
+      console.log();
+      this.print2D(correlation_table);
+      console.log();
+      console.log(volatilities.map(a => (a/(Math.sqrt(1/(252*6.5*60))))).map(a=>a.toFixed(3)).join(" "));
+    }
+
+    return {
+      correlation: correlation_table,
+      volatility: volatilities
+    }
   }
 
   volToCov(Sigma) {

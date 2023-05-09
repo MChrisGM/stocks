@@ -5,8 +5,8 @@ body {
 	overflow: hidden;
 	background-color: rgb(51, 51, 51);
 	color: rgb(255, 255, 255);
-  font-family: Arial, sans-serif;
-  cursor: default;
+  	font-family: Arial, sans-serif;
+  	cursor: default;
 }
 
 canvas {

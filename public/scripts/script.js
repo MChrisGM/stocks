@@ -142,9 +142,13 @@ function update_graph(){
       type: 'candlestick',
       palette: 'fiveColor18',
       title_label_text: " ",
+      animation: { duration: 250 },
+      chartArea_fill: "#fff",
+      fill:"#fff",
       legend: {
         template: '%icon %name',
-        position: 'inside top left'
+        position: 'inside top left',
+        fill: "#fff"
       },
       yAxis: {
         formatString: 'c',

@@ -24,11 +24,11 @@ function listen() {
 
   setInterval(function() {
     io.sockets.emit("stocks", market.getStocks());
-  }, 1000);
+  }, 300);
 
   setInterval(function() {
-    // market.getSeriesInfo();
-  }, 1000);
+    market.getSeriesInfo(true);
+  }, 10000);
 
 }
 
